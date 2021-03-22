@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// @dart=2.9
-
 part of firebase_remote_config;
 
 /// The entry point for accessing Remote Config.
@@ -12,7 +10,7 @@ part of firebase_remote_config;
 /// [RemoteConfig.instance] is async.
 // ignore: prefer_mixin
 class RemoteConfig extends FirebasePluginPlatform with ChangeNotifier {
-  RemoteConfig._({this.app})
+  RemoteConfig._({required this.app})
       : super(app.name, 'plugins.flutter.io/firebase_remote_config');
 
   // Cached instances of [FirebaseRemoteConfig].
@@ -22,19 +20,17 @@ class RemoteConfig extends FirebasePluginPlatform with ChangeNotifier {
   // to avoid creating a [MethodChannelFirebaseRemoteConfig] when not needed
   // or creating an instance with the default app before a user specifies an
   // app.
-  FirebaseRemoteConfigPlatform _delegatePackingProperty;
+  late final FirebaseRemoteConfigPlatform _delegatePackingProperty =
+      FirebaseRemoteConfigPlatform.instanceFor(
+    app: app,
+    pluginConstants: pluginConstants,
+  );
 
   /// Returns the underlying delegate implementation.
   ///
   /// If called and no [_delegatePackingProperty] exists, it will first be
   /// created and assigned before returning the delegate.
-  FirebaseRemoteConfigPlatform get _delegate {
-    return _delegatePackingProperty ??=
-        FirebaseRemoteConfigPlatform.instanceFor(
-      app: app,
-      pluginConstants: pluginConstants,
-    );
-  }
+  FirebaseRemoteConfigPlatform get _delegate => _delegatePackingProperty;
 
   /// The [FirebaseApp] this instance was initialized with.
   final FirebaseApp app;
@@ -45,11 +41,9 @@ class RemoteConfig extends FirebasePluginPlatform with ChangeNotifier {
   }
 
   /// Returns an instance using the specified [FirebaseApp].
-  static RemoteConfig instanceFor({@required FirebaseApp app}) {
-    assert(app != null);
-
+  static RemoteConfig instanceFor({required FirebaseApp app}) {
     if (_firebaseRemoteConfigInstances.containsKey(app.name)) {
-      return _firebaseRemoteConfigInstances[app.name];
+      return _firebaseRemoteConfigInstances[app.name]!;
     }
 
     RemoteConfig newInstance = RemoteConfig._(app: app);
@@ -62,90 +56,60 @@ class RemoteConfig extends FirebasePluginPlatform with ChangeNotifier {
   ///
   /// If no successful fetch has been made a [DateTime] representing
   /// the epoch (1970-01-01 UTC) is returned.
-  DateTime get lastFetchTime {
-    return _delegate.lastFetchTime;
-  }
+  DateTime get lastFetchTime => _delegate.lastFetchTime;
 
   /// Returns the status of the last fetch attempt.
-  RemoteConfigFetchStatus get lastFetchStatus {
-    return _delegate.lastFetchStatus;
-  }
+  RemoteConfigFetchStatus get lastFetchStatus => _delegate.lastFetchStatus;
 
   /// Returns the [RemoteConfigSettings] of the current instance.
-  RemoteConfigSettings get settings {
-    return _delegate.settings;
-  }
+  RemoteConfigSettings get settings => _delegate.settings;
 
   /// Makes the last fetched config available to getters.
   ///
   /// Returns a [bool] that is true if the config parameters
   /// were activated. Returns a [bool] that is false if the
   /// config parameters were already activated.
-  Future<bool> activate() async {
-    bool configChanged = await _delegate.activate();
+  Future<bool?> activate() async {
+    bool? configChanged = await _delegate.activate();
     notifyListeners();
     return configChanged;
   }
 
   /// Ensures the last activated config are available to getters.
-  Future<void> ensureInitialized() {
-    return _delegate.ensureInitialized();
-  }
+  Future<void> ensureInitialized() => _delegate.ensureInitialized();
 
   /// Fetches and caches configuration from the Remote Config service.
-  Future<void> fetch() {
-    return _delegate.fetch();
-  }
+  Future<void> fetch() => _delegate.fetch();
 
   /// Performs a fetch and activate operation, as a convenience.
   ///
   /// Returns [bool] in the same way that is done for [activate].
-  Future<bool> fetchAndActivate() async {
-    bool configChanged = await _delegate.fetchAndActivate();
+  Future<bool?> fetchAndActivate() async {
+    bool? configChanged = await _delegate.fetchAndActivate();
     notifyListeners();
     return configChanged;
   }
 
   /// Returns a Map of all Remote Config parameters.
-  Map<String, RemoteConfigValue> getAll() {
-    return _delegate.getAll();
-  }
+  Map<String, RemoteConfigValue>? getAll() => _delegate.getAll();
 
   /// Gets the value for a given key as a bool.
-  bool getBool(String key) {
-    assert(key != null);
-    return _delegate.getBool(key);
-  }
+  bool getBool(String key) => _delegate.getBool(key);
 
   /// Gets the value for a given key as an int.
-  int getInt(String key) {
-    assert(key != null);
-    return _delegate.getInt(key);
-  }
+  int getInt(String key) => _delegate.getInt(key);
 
   /// Gets the value for a given key as a double.
-  double getDouble(String key) {
-    assert(key != null);
-    return _delegate.getDouble(key);
-  }
+  double getDouble(String key) => _delegate.getDouble(key);
 
   /// Gets the value for a given key as a String.
-  String getString(String key) {
-    assert(key != null);
-    return _delegate.getString(key);
-  }
+  String getString(String key) => _delegate.getString(key);
 
   /// Gets the [RemoteConfigValue] for a given key.
-  RemoteConfigValue getValue(String key) {
-    assert(key != null);
-    return _delegate.getValue(key);
-  }
+  RemoteConfigValue? getValue(String key) => _delegate.getValue(key);
 
   /// Sets the [RemoteConfigSettings] for the current instance.
   Future<void> setConfigSettings(RemoteConfigSettings remoteConfigSettings) {
-    assert(remoteConfigSettings != null);
-    assert(remoteConfigSettings.fetchTimeout != null);
-    assert(remoteConfigSettings.minimumFetchInterval != null);
     assert(!remoteConfigSettings.fetchTimeout.isNegative);
     assert(!remoteConfigSettings.minimumFetchInterval.isNegative);
     // To be consistent with iOS fetchTimeout is set to the default
@@ -157,8 +121,6 @@ class RemoteConfig extends FirebasePluginPlatform with ChangeNotifier {
   }
 
   /// Sets the default parameter values for the current instance.
-  Future<void> setDefaults(Map<String, dynamic> defaultParameters) {
-    assert(defaultParameters != null);
-    return _delegate.setDefaults(defaultParameters);
-  }
+  Future<void> setDefaults(Map<String, dynamic> defaultParameters) =>
+      _delegate.setDefaults(defaultParameters);
 }

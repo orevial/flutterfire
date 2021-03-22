@@ -1,5 +1,3 @@
-// @dart=2.9
-
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -21,12 +19,13 @@ import '../method_channel/method_channel_firebase_remote_config.dart';
 /// [FirebaseRemoteConfigPlatform] methods.
 abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   /// Create an instance using [app].
-  FirebaseRemoteConfigPlatform({this.appInstance}) : super(token: _token);
+  FirebaseRemoteConfigPlatform({required this.appInstance})
+      : super(token: _token);
 
   /// Create instance using [app] using the existing implementation.
   factory FirebaseRemoteConfigPlatform.instanceFor({
-    FirebaseApp app,
-    Map<dynamic, dynamic> pluginConstants,
+    required FirebaseApp app,
+    Map<dynamic, dynamic>? pluginConstants,
   }) {
     return FirebaseRemoteConfigPlatform.instance
         .delegateFor(app: app)
@@ -39,17 +38,17 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
 
   /// The [FirebaseApp] this instance was initialized with.
   @protected
-  final FirebaseApp appInstance;
+  final FirebaseApp? appInstance;
 
   /// Returns the [FirebaseApp] for the current instance.
   FirebaseApp get app {
     if (appInstance == null) {
       return Firebase.app();
     }
-    return appInstance;
+    return appInstance!;
   }
 
-  static FirebaseRemoteConfigPlatform _instance;
+  static FirebaseRemoteConfigPlatform? _instance;
 
   /// The current default [FirebaseRemoteConfigPlatform] instance.
   ///
@@ -61,7 +60,6 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
 
   /// Sets the [FirebaseRemoteConfigPlatform] instance.
   static set instance(FirebaseRemoteConfigPlatform instance) {
-    assert(instance != null);
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }
@@ -69,7 +67,7 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   /// Enables delegates to create new instances of themselves if a none
   /// default [FirebaseApp] instance is required by the user.
   @protected
-  FirebaseRemoteConfigPlatform delegateFor({FirebaseApp app}) {
+  FirebaseRemoteConfigPlatform delegateFor({required FirebaseApp app}) {
     throw UnimplementedError('delegateFor() is not implemented');
   }
 
@@ -80,7 +78,7 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   /// async calls.
   @protected
   FirebaseRemoteConfigPlatform setInitialValues(
-      {Map<dynamic, dynamic> remoteConfigValues}) {
+      {required Map<dynamic, dynamic> remoteConfigValues}) {
     throw UnimplementedError('setInitialValues() is not implemented');
   }
 
@@ -107,7 +105,7 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   /// Returns a [bool] that is true if the config parameters
   /// were activated. Returns a [bool] that is false if the
   /// config parameters were already activated.
-  Future<bool> activate() {
+  Future<bool?> activate() {
     throw UnimplementedError('activate() is not implemented');
   }
 
@@ -124,7 +122,7 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   /// Performs a fetch and activate operation, as a convenience.
   ///
   /// Returns [bool] in the same way that is done for [activate].
-  Future<bool> fetchAndActivate() {
+  Future<bool?> fetchAndActivate() {
     throw UnimplementedError('fetchAndActivate() is not implemented');
   }
 
@@ -154,7 +152,7 @@ abstract class FirebaseRemoteConfigPlatform extends PlatformInterface {
   }
 
   /// Gets the [RemoteConfigValue] for a given key.
-  RemoteConfigValue getValue(String key) {
+  RemoteConfigValue? getValue(String key) {
     throw UnimplementedError('getValue() is not implemented');
   }
 

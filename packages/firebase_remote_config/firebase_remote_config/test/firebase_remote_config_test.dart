@@ -2,15 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// @dart=2.9
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:firebase_remote_config_platform_interface/firebase_remote_config_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-
 import 'package:mockito/mockito.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'mock.dart';
 
@@ -19,20 +16,22 @@ MockFirebaseRemoteConfig mockRemoteConfigPlatform = MockFirebaseRemoteConfig();
 void main() {
   setupFirebaseRemoteConfigMocks();
 
-  RemoteConfig remoteConfig;
+  late RemoteConfig remoteConfig;
 
   DateTime mockLastFetchTime;
   RemoteConfigFetchStatus mockLastFetchStatus;
   RemoteConfigSettings mockRemoteConfigSettings;
-  Map<String, RemoteConfigValue> mockParameters;
-  Map<String, dynamic> mockDefaultParameters;
+  late Map<String, RemoteConfigValue> mockParameters;
+  late Map<String, dynamic> mockDefaultParameters;
   RemoteConfigValue mockRemoteConfigValue;
 
   group('$RemoteConfig', () {
     FirebaseRemoteConfigPlatform.instance = mockRemoteConfigPlatform;
 
     setUpAll(() async {
-      await Firebase.initializeApp();
+      print('In setup');
+      final app = await Firebase.initializeApp();
+      print('Got app: $app');
       remoteConfig = RemoteConfig.instance;
 
       mockLastFetchTime = DateTime(2020);
@@ -49,16 +48,18 @@ void main() {
       );
 
       when(mockRemoteConfigPlatform.instanceFor(
-              app: anyNamed('app'),
-              pluginConstants: anyNamed('pluginConstants')))
+              app: app, pluginConstants: anyNamed('pluginConstants')))
           .thenAnswer((_) => mockRemoteConfigPlatform);
 
-      when(mockRemoteConfigPlatform.delegateFor(
-        app: anyNamed('app'),
-      )).thenAnswer((_) => mockRemoteConfigPlatform);
+      print('Got app: $app - mockRemote: $mockRemoteConfigPlatform');
+      mockRemoteConfigPlatform.delegateFor(app: app);
+      print('In erE?');
 
-      when(mockRemoteConfigPlatform.setInitialValues(
-              remoteConfigValues: anyNamed('remoteConfigValues')))
+      when(mockRemoteConfigPlatform.delegateFor(
+        app: app,
+      )).thenReturn(mockRemoteConfigPlatform);
+
+      when(mockRemoteConfigPlatform.setInitialValues(remoteConfigValues: {}))
           .thenAnswer((_) => mockRemoteConfigPlatform);
 
       when(mockRemoteConfigPlatform.lastFetchTime)
@@ -70,8 +71,8 @@ void main() {
       when(mockRemoteConfigPlatform.settings)
           .thenReturn(mockRemoteConfigSettings);
 
-      when(mockRemoteConfigPlatform.setConfigSettings(any))
-          .thenAnswer((_) => null);
+      // when(mockRemoteConfigPlatform.setConfigSettings(any!))
+      //     .thenAnswer(((_) => null) as Future<void> Function(Invocation));
 
       when(mockRemoteConfigPlatform.activate())
           .thenAnswer((_) => Future.value(true));
@@ -97,8 +98,8 @@ void main() {
       when(mockRemoteConfigPlatform.getValue('foo'))
           .thenReturn(mockRemoteConfigValue);
 
-      when(mockRemoteConfigPlatform.setDefaults(any))
-          .thenAnswer((_) => Future.value());
+      // when(mockRemoteConfigPlatform.setDefaults(any!))
+      //     .thenAnswer((_) => Future.value());
     });
 
     test('doubleInstance', () async {
@@ -138,13 +139,6 @@ void main() {
         verify(
             mockRemoteConfigPlatform.setConfigSettings(remoteConfigSettings));
       });
-
-      test('should throw if settings is null', () async {
-        expect(
-          () => remoteConfig.setConfigSettings(null),
-          throwsAssertionError,
-        );
-      });
     });
 
     group('activate()', () {
@@ -154,7 +148,7 @@ void main() {
       });
     });
 
-    group('ensureEnitialized()', () {
+    group('ensureInitialized()', () {
       test('should call delegate method', () async {
         await remoteConfig.ensureInitialized();
         verify(mockRemoteConfigPlatform.ensureInitialized());
@@ -187,20 +181,12 @@ void main() {
         remoteConfig.getBool('foo');
         verify(mockRemoteConfigPlatform.getBool('foo'));
       });
-
-      test('should throw if key is null', () {
-        expect(() => remoteConfig.getBool(null), throwsAssertionError);
-      });
     });
 
     group('getInt()', () {
       test('should call delegate method', () {
         remoteConfig.getInt('foo');
         verify(mockRemoteConfigPlatform.getInt('foo'));
-      });
-
-      test('should throw if key is null', () {
-        expect(() => remoteConfig.getInt(null), throwsAssertionError);
       });
     });
 
@@ -209,20 +195,12 @@ void main() {
         remoteConfig.getDouble('foo');
         verify(mockRemoteConfigPlatform.getDouble('foo'));
       });
-
-      test('should throw if key is null', () {
-        expect(() => remoteConfig.getDouble(null), throwsAssertionError);
-      });
     });
 
     group('getString()', () {
       test('should call delegate method', () {
         remoteConfig.getString('foo');
         verify(mockRemoteConfigPlatform.getString('foo'));
-      });
-
-      test('should throw if key is null', () {
-        expect(() => remoteConfig.getString(null), throwsAssertionError);
       });
     });
 
@@ -231,20 +209,12 @@ void main() {
         remoteConfig.getValue('foo');
         verify(mockRemoteConfigPlatform.getValue('foo'));
       });
-
-      test('should throw if key is null', () {
-        expect(() => remoteConfig.getValue(null), throwsAssertionError);
-      });
     });
 
     group('setDefaults()', () {
       test('should call delegate method', () {
         remoteConfig.setDefaults(mockParameters);
         verify(mockRemoteConfigPlatform.setDefaults(mockDefaultParameters));
-      });
-
-      test('should throw if parameters are null', () {
-        expect(() => remoteConfig.setDefaults(null), throwsAssertionError);
       });
     });
   });
@@ -260,18 +230,20 @@ class MockFirebaseRemoteConfig extends Mock
 }
 
 class TestFirebaseRemoteConfigPlatform extends FirebaseRemoteConfigPlatform {
-  TestFirebaseRemoteConfigPlatform() : super();
+  TestFirebaseRemoteConfigPlatform() : super(appInstance: null);
 
-  void instanceFor({FirebaseApp app, Map<dynamic, dynamic> pluginConstants}) {}
+  void instanceFor(
+      {required FirebaseApp app, Map<dynamic, dynamic>? pluginConstants}) {}
 
   @override
-  FirebaseRemoteConfigPlatform delegateFor({FirebaseApp app}) {
+  FirebaseRemoteConfigPlatform delegateFor({required FirebaseApp app}) {
+    print('This is :$this');
     return this;
   }
 
   @override
   FirebaseRemoteConfigPlatform setInitialValues(
-      {Map<dynamic, dynamic> remoteConfigValues}) {
+      {required Map<dynamic, dynamic> remoteConfigValues}) {
     return this;
   }
 }

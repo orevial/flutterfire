@@ -1,15 +1,19 @@
-// @dart=2.9
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:e2e/e2e.dart';
+
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter_driver/driver_extension.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  E2EWidgetsFlutterBinding.ensureInitialized();
+  final Completer<String> completer = Completer<String>();
+  enableFlutterDriverExtension(handler: (_) => completer.future);
+  tearDownAll(() => completer.complete(null));
 
   group('$RemoteConfig', () {
-    RemoteConfig remoteConfig;
+    late RemoteConfig remoteConfig;
 
     setUp(() async {
       await Firebase.initializeApp();
@@ -33,15 +37,15 @@ void main() {
 
       // TODO should verify that our config settings actually took
       expect(remoteConfig.getString('welcome'), 'Earth, welcome! Hello!');
-      expect(remoteConfig.getValue('welcome').source, ValueSource.valueRemote);
+      expect(remoteConfig.getValue('welcome')!.source, ValueSource.valueRemote);
 
       expect(remoteConfig.getString('hello'), 'default hello');
-      expect(remoteConfig.getValue('hello').source, ValueSource.valueDefault);
+      expect(remoteConfig.getValue('hello')!.source, ValueSource.valueDefault);
 
       expect(remoteConfig.getInt('nonexisting'), 0);
 
       expect(
-        remoteConfig.getValue('nonexisting').source,
+        remoteConfig.getValue('nonexisting')!.source,
         ValueSource.valueStatic,
       );
     });
